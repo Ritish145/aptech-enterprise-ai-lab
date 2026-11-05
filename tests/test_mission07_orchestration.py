@@ -46,8 +46,59 @@ def test_api():
     broken = TestClient(module.create_app(failing)).post("/orchestrate", json=payload)
     assert broken.status_code == 502 and broken.json()["detail"] == "Specialist execution failed"
 
+
+# TEST 4: BUG-006 Alternating User Isolation
+def test_alternating_user_isolation():
+    received = []
+
+    def policy_handler(question):
+        received.append(question)
+        return "Policy request received"
+
+    engine = Orchestrator({
+        "policy": policy_handler,
+        "engineering": lambda q: "Engineering response",
+        "clarifier": lambda q: "Clarification needed"
+    })
+
+    requests = [
+        ("alice", "a-1", "remote policy"),
+        ("bob", "b-1", "leave policy"),
+        ("alice", "a-2", "expense reimbursement policy")
+    ]
+
+    for user_id, request_id, question in requests:
+        result = engine.run(question, user_id, request_id)
+
+        # Verify user isolation
+        assert result["user_id"] == user_id
+
+        # Verify request isolation
+        assert result["request_id"] == request_id
+
+        # Verify specialist routing
+        assert result["specialist"] == "policy"
+
+        # Verify bounded handoff
+        assert result["handoff_count"] == 1
+
+        # Verify answer validation status
+        assert result["verified"] is False
+
+    # Verify each request reached the handler correctly
+    assert received == [
+        "remote policy",
+        "leave policy",
+        "expense reimbursement policy"
+    ]
+
+    print("PASS: BUG-006 alternating user isolation")
+
+
 if __name__ == "__main__":
     test_routing()
     test_isolation_and_bounded_handoff()
     test_api()
+    test_alternating_user_isolation()
+
     print("PASS: routing, bounded handoffs, isolation, validation and error boundary")
