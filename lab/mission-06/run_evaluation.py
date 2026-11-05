@@ -17,6 +17,7 @@ CASES = [
     EvalCase("remote work days per week", "REMOTE-2026"),
     EvalCase("expense reimbursement deadline", "EXPENSE-2026"),
     EvalCase("unmatchedzzzzzz", None),
+    EvalCase("manager approval for remote work", "REMOTE-2026"),
 ]
 
 def run() -> dict:

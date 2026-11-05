@@ -41,9 +41,9 @@ def test_dataset():
     except ValueError:
         pass
     integration = run()
-    assert integration["cases"] == 3
-    assert integration["passed"] == 3
-    assert integration["trace_summary"]["events"] == 3
+    assert integration["cases"] == 4
+    assert integration["passed"] == 4
+    assert integration["trace_summary"]["events"] == 4
 
 if __name__ == "__main__":
     test_traces()
